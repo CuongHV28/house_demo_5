@@ -1,6 +1,17 @@
 import * as THREE from 'three';
-import { colors, groundMaterial } from './materials';
+import { colors, 
+  groundMaterial, 
+  floorMaterial, 
+  roofMaterial, 
+  windowMaterial, 
+  wallMaterial, 
+  woodMaterial, 
+  normalMaterial, 
+  standartMaterial, 
+  lambert, 
+  phongMaterial } from './materials';
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { IWallSettings } from './shapes/baseShapes';
 
 
 
@@ -88,6 +99,27 @@ controls.enableDamping = true;
 controls.enablePan = true;
 controls.target = cameraSettings.lookAt;
 
+// add light 
+// const ambientLight = new THREE.AmbientLight(0x404040); // soft white light
+// scene.add(ambientLight);
+
+// // Add a directional light for better illumination
+// const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // white light with full intensity
+// directionalLight.position.set(0, 1, 1); // adjust as needed
+// scene.add(directionalLight);
+// Add ambient and directional lights to the scene
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.75);
+directionalLight.position.set(5, 10, 7.5);
+scene.add(directionalLight);
+
+// Adjust renderer settings for improved lighting effects
+renderer.physicallyCorrectLights = true;
+renderer.gammaFactor = 2.2;
+renderer.gammaOutput = true;
+
 // add a ground plane
 const groundPlane = new THREE.Mesh(
     new THREE.CylinderGeometry(30, 30, 1, 32),
@@ -96,15 +128,92 @@ const groundPlane = new THREE.Mesh(
 groundPlane.position.y = -0.5;
 groundPlane.castShadow = true;
 groundPlane.receiveShadow = true;
+// The ground plane is at y = -0.5, and its height is 1
+const groundPlaneHeight = 1;
+const groundPlaneYPosition = -0.5;
 scene.add(groundPlane);
 
-// Optional: Create a geometry, a material, and a mesh
-const geometry = new THREE.BoxGeometry();
-const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-const cube = new THREE.Mesh(geometry, material);
 
-// Optional: Add the mesh to the scene
-scene.add(cube);
+let wallWidth = 0.2;
+let wallHeight = 2;
+const wall1Depth = 5; // Depth of wall1
+const wall2Depth = 2; // Depth of wall2
+// First wall (already created)
+const geometry1 = new THREE.BoxGeometry(wallWidth, wallHeight, wall1Depth);
+const wall1 = new THREE.Mesh(geometry1, wallMaterial);
+wall1.position.y = groundPlaneYPosition + (groundPlaneHeight / 2) + (wallHeight / 2);
+
+// Second wall - next to the first wall
+const geometry2 = new THREE.BoxGeometry(wallWidth, wallHeight, wall2Depth);
+const wall2 = new THREE.Mesh(geometry2, wallMaterial);
+wall2.position.x = wall1.position.x + (wallWidth / 2) + (wall2Depth / 2); // Adjust based on the room's depth
+wall2.position.y = wall1.position.y;
+wall2.position.z = -(wall1.position.z - (wall1Depth / 2) + (wallWidth / 2)); // Adjust based on the room's depth
+// Rotating wall2 to be perpendicular to wall1
+wall2.rotation.y = Math.PI / 2; // Rotate 90 degrees around the y-axis
+
+// Third wall - side wall
+const geometry3 = new THREE.BoxGeometry(wallWidth, wallHeight, wall1Depth); // same as wall 1
+const wall3 = new THREE.Mesh(geometry3, wallMaterial);
+wall3.position.y = wall1.position.y;
+wall3.position.x = wall2.position.x + (wall2Depth / 2) + (wallWidth / 2); // Adjust based on the room's width
+
+// // Fourth wall - opposite side wall
+const geometry4 = new THREE.BoxGeometry(wallWidth, wallHeight, wall2Depth); // Same dimensions as the 2nd wall
+const wall4 = new THREE.Mesh(geometry4, wallMaterial);
+wall4.position.y = wall1.position.y;
+wall4.position.x = wall2.position.x; 
+wall4.position.z = -(wall3.position.z + (wall1Depth / 2) - (wallWidth / 2)); // Adjust based on the room's depth
+// Rotating wall2 to be perpendicular to wall1
+wall4.rotation.y = Math.PI / 2; // Rotate 90 degrees around the y-axis
+
+// Add walls to the scene
+scene.add(wall1);
+scene.add(wall2);
+scene.add(wall3);
+scene.add(wall4);
+
+// add roof
+// Define the vertices for the pitched roof
+const vertices = new Float32Array([
+  // Base of the roof
+  -wall2Depth / 2 - wallWidth, 0,  wall1Depth / 2,  // Back left corner
+   wall2Depth / 2 + wallWidth, 0,  wall1Depth / 2,  // Back right corner
+   wall2Depth / 2 + wallWidth, 0, - wall1Depth / 2,  // Front right corner
+  -wall2Depth / 2 - wallWidth, 0, -wall1Depth / 2,  // Front left corner
+  // Top of the roof
+  0, wallHeight / 2, 0,  // Top center point
+]);
+
+// Define the indices for the faces of the roof
+const indices = new Uint16Array([
+  0, 1, 4, // Back face
+  1, 2, 4, // Right face
+  2, 3, 4, // Front face
+  3, 0, 4  // Left face
+]);
+
+// Create a buffer geometry
+const roofGeometry = new THREE.BufferGeometry();
+roofGeometry.setIndex(new THREE.BufferAttribute(indices, 1));
+roofGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+
+// Compute normals for the lighting calculations
+roofGeometry.computeVertexNormals();
+
+// const roofMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513, side: THREE.DoubleSide });
+const roofMaterial = new THREE.MeshStandardMaterial({
+  color: 0x8B4513,
+  side: THREE.DoubleSide,
+  metalness: 0.2,
+  roughness: 0.5
+});
+const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+roof.position.x = wall1.position.x + (wall2Depth / 2) + (wallWidth / 2);
+roof.position.y = wall1.position.y + (wallHeight / 2); // Adjust the height to sit on top of the walls
+scene.add(roof);
+
+
 
 function animate() {
     requestAnimationFrame(animate);

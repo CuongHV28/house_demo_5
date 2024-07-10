@@ -1,4 +1,4 @@
-import { MeshStandardMaterial } from "three";
+import { DoubleSide, MeshLambertMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshStandardMaterial } from "three";
 
 const colors = {
     ground: 0x333333,
@@ -16,10 +16,38 @@ const colors = {
     green: 0x008833
 };
 
+const normalMaterial = new MeshNormalMaterial();
+const standartMaterial = new MeshStandardMaterial({ color: 0x666666 });
+const lambert = new MeshLambertMaterial({ color: "#fff" });
+const phongMaterial = new MeshPhongMaterial({ color: 0x0908ef });
+
 let groundMaterial = new MeshStandardMaterial({
     color: colors.ground,
     transparent: true,
     opacity: 0.5,
 });
 
-export { colors, groundMaterial };
+let floorMaterial = new MeshLambertMaterial({
+    color: colors.floor,
+    side: DoubleSide
+});
+
+let roofMaterial = new MeshLambertMaterial({
+    color: colors.roof,
+    side: DoubleSide
+});
+let windowMaterial = new MeshStandardMaterial({ color: colors.window });
+
+let wallMaterial = new MeshLambertMaterial({
+    color: colors.wall,
+    side: DoubleSide
+});
+
+let woodMaterial = new MeshStandardMaterial({
+    color: colors.wood,
+    metalness: 0,
+    roughness: 0.5
+});
+
+
+export { colors, groundMaterial, floorMaterial, roofMaterial, windowMaterial, wallMaterial, woodMaterial, normalMaterial, standartMaterial, lambert, phongMaterial };
