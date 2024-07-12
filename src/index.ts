@@ -149,7 +149,7 @@ scene.add(groundPlane);
 
 
 let wallWidth = 0.2;
-let wallHeight = 2;
+let wallHeight = 4;
 const wall1Depth = 5; // Depth of wall1
 const wall2Depth = 2; // Depth of wall2
 const floorThickness = 0.05; // thickness of the floor
@@ -173,13 +173,13 @@ floor.position.y = floorSettings.position.y;
 scene.add(floor);
 
 // First wall (already created)
-const geometry1 = new THREE.BoxGeometry(wallWidth, wallHeight, wall1Depth);
-const wall1 = new THREE.Mesh(geometry1, wallMaterial);
+let geometry1 = new THREE.BoxGeometry(wallWidth, wallHeight, wall1Depth);
+let wall1 = new THREE.Mesh(geometry1, wallMaterial);
 wall1.position.y = groundPlaneYPosition + (groundPlaneHeight / 2) + (floorThickness / 2) + (wallHeight / 2);
 
 // Second wall - next to the first wall
-const geometry2 = new THREE.BoxGeometry(wallWidth, wallHeight, wall2Depth);
-const wall2 = new THREE.Mesh(geometry2, wallMaterial);
+let geometry2 = new THREE.BoxGeometry(wallWidth, wallHeight, wall2Depth);
+let wall2 = new THREE.Mesh(geometry2, wallMaterial);
 wall2.position.x = wall1.position.x + (wallWidth / 2) + (wall2Depth / 2); // Adjust based on the room's depth
 wall2.position.y = groundPlaneYPosition + (groundPlaneHeight / 2) + (floorThickness / 2) + (wallHeight / 2);
 wall2.position.z = -(wall1.position.z - (wall1Depth / 2) + (wallWidth / 2)); // Adjust based on the room's depth
@@ -187,14 +187,14 @@ wall2.position.z = -(wall1.position.z - (wall1Depth / 2) + (wallWidth / 2)); // 
 wall2.rotation.y = Math.PI / 2; // Rotate 90 degrees around the y-axis
 
 // Third wall - side wall
-const geometry3 = new THREE.BoxGeometry(wallWidth, wallHeight, wall1Depth); // same as wall 1
-const wall3 = new THREE.Mesh(geometry3, wallMaterial);
+let geometry3 = new THREE.BoxGeometry(wallWidth, wallHeight, wall1Depth); // same as wall 1
+let wall3 = new THREE.Mesh(geometry3, wallMaterial);
 wall3.position.y = groundPlaneYPosition + (groundPlaneHeight / 2) + (floorThickness / 2) + (wallHeight / 2);
 wall3.position.x = wall2.position.x + (wall2Depth / 2) + (wallWidth / 2); // Adjust based on the room's width
 
 // // Fourth wall - opposite side wall
-const geometry4 = new THREE.BoxGeometry(wallWidth, wallHeight, wall2Depth); // Same dimensions as the 2nd wall
-const wall4 = new THREE.Mesh(geometry4, wallMaterial);
+let geometry4 = new THREE.BoxGeometry(wallWidth, wallHeight, wall2Depth); // Same dimensions as the 2nd wall
+let wall4 = new THREE.Mesh(geometry4, wallMaterial);
 wall4.position.y = groundPlaneYPosition + (groundPlaneHeight / 2) + (floorThickness / 2) + (wallHeight / 2);
 wall4.position.x = wall2.position.x; 
 wall4.position.z = -(wall3.position.z + (wall1Depth / 2) - (wallWidth / 2)); // Adjust based on the room's depth
@@ -209,43 +209,25 @@ scene.add(wall4);
 
 
 
-// Assuming ThreeCSG is available and compatible with your version of THREE.js
 // Create wall geometry
-
-
-const testwall2Height = 8;
-const wallGeometry = new THREE.BoxGeometry(10, testwall2Height, 0.5);
+const testWallWidth = 10;
+const testWallHeight = 8;
+const testWallDepth = 0.5;
+const wallGeometry = new THREE.BoxGeometry(10, testWallHeight, testWallDepth);
 const wallMesh = new THREE.Mesh(wallGeometry, wallMaterial);
-wallMesh.position.set(-10, 4, 0);
-scene.add(wallMesh);
+wallMesh.position.set(10, 4, 5);
 
-// // Calculate the bottom position of the wall
-// // Assuming the corrected doorHeight is 1 unit
-const doorHeight = 4;
+// Calculate the bottom of the wall based on its center position and height
+const bottomOfWall = wallMesh.position.y - (testWallHeight / 2);
+const testWindowHeight = 0.1 * testWallHeight;
+const testWindowWidth = 0.1 * testWallWidth;
 
-// // Calculate the bottom of the wall based on its center position and height
-const bottomOfWall = wallMesh.position.y - (testwall2Height / 2);
-
-// const doorGeometry = new THREE.BoxGeometry(2, doorHeight, 0.5);
-// const doorMesh = new THREE.Mesh(doorGeometry);
-// // Adjust door position to ensure it intersects the wall
-// doorMesh.position.set(2, bottomOfWall + doorHeight / 2, 0);
-// scene.add(doorMesh);
-
-// const hole = new Operation(doorGeometry);
-// hole.operation = SUBTRACTION;
-// hole.position.x = 2;
-// hole.position.y = bottomOfWall + doorHeight / 2;
-// hole.position.z = 0;
-// hole.matrixAutoUpdate = false;
-// hole.updateMatrix();
-// scene.add(hole);
-
-
-
+const doorHeight = 0.5 * testWallHeight;
+const doorWidth = 0.5 *testWallWidth;
+//draw doors and windows
 // Assuming 'CSG' is a compatible library and 'wallMesh' is the mesh you want to subtract from
-const doorGeometry = new THREE.BoxGeometry(2, doorHeight, 0.5);
-const windowGeometry = new THREE.BoxGeometry(2, 1.5, 0.5);
+const doorGeometry = new THREE.BoxGeometry(doorWidth, doorHeight, testWallDepth);
+const windowGeometry = new THREE.BoxGeometry(testWindowWidth, testWindowHeight, testWallDepth);
 const doorMesh = new THREE.Mesh(doorGeometry);
 const windowMesh = new THREE.Mesh(windowGeometry, windowMaterial);
 
@@ -268,7 +250,6 @@ windowMatrix.makeTranslation(windowPositionX, windowPositionY, windowPositionZ);
 doorMesh.applyMatrix4(doorMatrix);
 windowMesh.applyMatrix4(windowMatrix);
 
-
 // Convert Three.js meshes to CSG objects
 const wallCSG = CSG.fromMesh(wallMesh, );
 const doorCSG = CSG.fromMesh(doorMesh, doorMatrix);
@@ -282,72 +263,127 @@ const subtractedWindowCSG = subtractedDoorCSG.subtract(windowCSG);
 const subtractedMesh = CSG.toMesh(subtractedWindowCSG, wallMesh.matrix);
 subtractedMesh.material = normalMaterial; // Reapply the wall material to the new mesh
 
-subtractedMesh.position.set(10, 4, 0); // Adjust the position as needed
+subtractedMesh.position.set(wallMesh.position.clone().y, wallMesh.position.clone().y, wallMesh.position.clone().z); // Adjust the position as needed
 scene.add(subtractedMesh); // Don't forget to add the subtracted mesh to the scene
 
 
+// function addHoles(wall) {
+//   // Extract wall dimensions
+//   const wallWidth = wall.geometry.parameters.width;
+//   const wallHeight = wall.geometry.parameters.height;
+//   const wallDepth = wall.geometry.parameters.depth;
 
+//   // Calculate dimensions for door and window
+//   const testWindowHeight = 0.1 * wallHeight;
+//   const testWindowWidth = 0.1 * wallWidth;
+//   const doorHeight = 0.5 * wallHeight;
+//   const doorWidth = 0.2 * wallWidth;
 
+//   // Create geometries for door and window
+//   const doorGeometry = new THREE.BoxGeometry(doorWidth, doorHeight, wallDepth + 0.01);
+//   const windowGeometry = new THREE.BoxGeometry(testWindowWidth, testWindowHeight, wallDepth + 0.01);
 
-// const windowGeometry = new THREE.BoxGeometry(2, 1.5, 0.5);
-// const windowMesh = new THREE.Mesh(windowGeometry, windowMaterial);
-// // Adjust window position to ensure it intersects the wall
-// windowMesh.position.set(3, 6.5, 0);
-// scene.add(windowMesh);
+//   // Create meshes for door and window
+//   const doorMesh = new THREE.Mesh(doorGeometry);
+//   const windowMesh = new THREE.Mesh(windowGeometry);
 
-// const wallPosition = { x: 0, y: 5, z: 0 };
-// // const wallHeight = 8;
+//   // Position door and window relative to the wall
+//   doorMesh.position.set(-wallWidth / 4, -wallHeight / 4, 0); // Example positioning
+//   windowMesh.position.set(wallWidth / 4, wallHeight / 4, 0); // Example positioning
 
-// // Door dimensions
+//   // Convert THREE.js meshes to CSG objects
+//   const wallCSG = CSG.fromMesh(wall);
+//   const doorCSG = CSG.fromMesh(doorMesh);
+//   const windowCSG = CSG.fromMesh(windowMesh);
 
-// // Calculate positions based on wall position and dimensions
-// const doorPositionY = wallPosition.y - (wallHeight / 2) + (doorHeight / 2);
-// const windowPositionY = doorPositionY + doorHeight / 2 + 1.5 / 2; // 1.5 is the window height, adjust the gap as needed
+//   // Subtract door and window from the wall
+//   const wallMinusDoor = wallCSG.subtract(doorCSG);
+//   const finalWall = wallMinusDoor.subtract(windowCSG);
 
-// // Set door and window positions
-// doorMesh.position.set(wallPosition.x + 1, doorPositionY, wallPosition.z  + 1);
-// windowMesh.position.set(wallPosition.x + 3, windowPositionY, wallPosition.z + 3);
+//   // Convert the final CSG back to a THREE.js mesh
+//   const finalWallMesh = CSG.toMesh(finalWall, wall.matrix, wall.material);
 
-//  
-
-
-
-
-// Define the wall using IHouseSide
-// const wall: IHouseSide = {
-//   start: new THREE.Vector3(0, 0, 0), // Starting at the origin
-//   end: new THREE.Vector3(10, 0, 0), // Ending 10 units to the right
-//   width: 0.5, // 0.5 units thick
-// };
-
-// Function to create a wall in THREE.js
-// function createWall(wall: IHouseSide) {
-//   if (!wall.start || !wall.end || !wall.width) {
-//     console.error("Wall definition is incomplete.");
-//     return;
-//   }
-
-//   // Calculate wall length
-//   const length = wall.start.distanceTo(wall.end);
-
-//   // Create a geometry for the wall
-//   const geometry = new THREE.BoxGeometry(length, 3, wall.width); // Assuming a height of 3 units
-//   const material = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red color for demonstration
-//   const mesh = new THREE.Mesh(geometry, material);
-
-//   // Position the mesh
-//   mesh.position.set(
-//     (wall.start.x + wall.end.x) / 2, // Midpoint of start and end x
-//     1.5, // Half of the height to align the bottom with the origin
-//     (wall.start.z + wall.end.z) / 2 // Midpoint of start and end z
-//   );
-
-//   // Add the mesh to your scene
-//   // scene.add(mesh);
-//   return mesh;
+//   return finalWallMesh;
 // }
-// const wall6 = createWall(wall);
-// scene.add(wall6);
+//test
+// const test = addHoles(wallMesh);
+// test.position.set(10, 4, 5);
+// scene.add(test);
+
+// // Step 1: Store original position and rotation
+// const originalPosition = wall1.position.clone();
+// const originalRotation = wall1.rotation.clone();
+
+// // Step 2: Modify the wall
+// let modifiedWall1 = addHoles(wall1.clone());
+
+// // Step 3: Apply original position and rotation to the modified wall
+// // modifiedWall1.position.copy(originalPosition);
+// // modifiedWall1.rotation.copy(originalRotation);
+
+// // Step 4: Replace in scene
+// // scene.remove(wall1);
+// modifiedWall1.position.set(-2, 4, 5);
+// scene.add(modifiedWall1);
+
+// Update the reference if needed
+// wall1 = modifiedWall1;
+// Assuming 'wall1' and 'wallMesh' refer to the same object, use 'wall1' consistently for clarity
+// const leftEdgeOfWall1 = wall1.position.x - (wall1.geometry.parameters.width / 2);
+// const bottomOfWall = wall1.position.y - (wall1.geometry.parameters.height / 2);
+// // const testWallHeight = wall1.geometry.parameters.height; // Assuming this is defined somewhere
+// // const testWallWidth = wall1.geometry.parameters.width; // Assuming this is defined somewhere
+// // const testWallDepth = wall1.geometry.parameters.depth; // Assuming this is defined somewhere
+
+// const testWindowHeight = 0.1 * wall1.geometry.parameters.height;
+// const testWindowWidth = 0.1 * wall1.geometry.parameters.width;
+
+// const doorHeight = 0.5 * testWallHeight;
+// const doorWidth = 0.5 * testWallWidth;
+
+// const doorOffsetLeft = 0.25 * testWallWidth; // Offset for the door from the left edge of the wall
+// const windowOffsetLeft = 0.05 * testWallWidth; // Offset for the window from the left edge of the wall
+
+// // Create door and window geometries
+// const doorGeometry = new THREE.BoxGeometry(doorWidth, doorHeight, testWallDepth);
+// const windowGeometry = new THREE.BoxGeometry(testWindowWidth, testWindowHeight, testWallDepth);
+
+// // Assuming 'normalMaterial' and 'windowMaterial' are defined somewhere
+// const doorMesh = new THREE.Mesh(doorGeometry, normalMaterial);
+// const windowMesh = new THREE.Mesh(windowGeometry, windowMaterial);
+
+// // Calculate positions
+// const doorPositionX = leftEdgeOfWall1 + doorOffsetLeft + (doorWidth / 2);
+// const doorPositionY = bottomOfWall + (doorHeight / 2);
+// const doorPositionZ = 0; // Assuming the wall and door are aligned in Z
+
+// const windowPositionX = leftEdgeOfWall1 + windowOffsetLeft + (testWindowWidth / 2);
+// const windowPositionY = bottomOfWall + wall1.geometry.parameters.height - 1.5 - (testWindowHeight / 2); // Adjusted to place the window above the door
+// const windowPositionZ = 0; // Assuming the wall and window are aligned in Z
+
+// // Apply transformations
+// doorMesh.position.set(doorPositionX, doorPositionY, doorPositionZ);
+// windowMesh.position.set(windowPositionX, windowPositionY, windowPositionZ);
+
+// // Convert Three.js meshes to CSG objects and perform subtraction
+// const wallCSG = CSG.fromMesh(wall1);
+// const doorCSG = CSG.fromMesh(doorMesh);
+// const windowCSG = CSG.fromMesh(windowMesh);
+
+// const subtractedDoorCSG = wallCSG.subtract(doorCSG);
+// const subtractedWindowCSG = subtractedDoorCSG.subtract(windowCSG);
+
+// // Convert the result back to a Three.js mesh
+// const subtractedMesh = CSG.toMesh(subtractedWindowCSG, wall1.matrix, normalMaterial);
+
+// // Correctly set the position of the subtracted mesh
+// subtractedMesh.position.copy(wallMesh.position);
+
+// // Add the subtracted mesh to the scene
+// scene.add(subtractedMesh);
+
+
+
 
 
 // add roof
